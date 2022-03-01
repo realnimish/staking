@@ -37,8 +37,9 @@ mod staking {
             let mut tokens = self.locked_amt;
             let mut claim = tokens/2;   // 50% unlocks on Day 1
             let daily_unlock = tokens/10; // 10% unlocks daily from Day 2
-            const DAY: Time = 60*60*24;
+            const DAY: Time = 1000*60*60*24;
 
+            tokens -= claim;
             period += DAY;
             while time >= period && tokens > 0 {
                 tokens -= daily_unlock;
@@ -142,12 +143,11 @@ mod staking {
             if value == 0 {
                 return;
             }
-            if let Some(mut lock) = self.get_lock_details() {
-                lock.last_claimed = Some(self.env().block_timestamp());
-            }
-
+            let mut lock = self.get_lock_details().unwrap();
+            lock.last_claimed = Some(self.env().block_timestamp());
             let caller = self.env().caller();
             self.env().transfer(caller,value).unwrap();
+            self.stakes.insert(&caller,&lock);
         }
     }
 
